@@ -1,3 +1,3 @@
-# Simple Starter
+# gen-62
 
-Simple JS build starter for simple, client-only demos.
+WIP
