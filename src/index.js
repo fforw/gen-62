@@ -120,7 +120,7 @@ function plotLine(x0, y0, x1, y1)
     const { palette, power, power2 } = config
 
 
-    const linePlotCount = 500 + Math.random() * 4500
+    const linePlotCount = 500 + Math.random() * 2500
 
     const dx = x1 - x0
     const dy = y1 - y0
@@ -151,7 +151,7 @@ function plotLine(x0, y0, x1, y1)
         const x2 = Math.round(x3 + Math.cos(angle) * r)
         const y2 = Math.round(y3 + Math.sin(angle) * r)
 
-        if (Math.random() < 0.025)
+        if (Math.random() < 0.033)
         {
             size *= 4
         }
@@ -188,94 +188,45 @@ function squares()
 let tmp, tmpCtx
 
 
-function drawCircle(x,y,r, angle, maxWidth, arc)
+function drawCircle(x,y, r, maxWidth)
 {
 
     const { width, height, palette, bg } = config
 
-    const aabb = new AABB()
-
     const slices = [];
+    const count = Math.round(12 + Math.random() * 40)
     for (let i=0; i < count; i++)
     {
         slices.push(Math.random() * TAU)
     }
-    slices.sort((a,b) => b - a)
+    slices.sort((a,b) => a - b)
 
-    console.log(slices)
-
-
-    const hw = Math.ceil(maxWidth / 2)
-
-    let a = angle - arc/2
-    for (let i=0; i < arc ; i += ARC_STEP)
+    let prev = slices[slices.length - 1]
+    ctx.lineWidth = maxWidth
+    for (let i = 0; i < slices.length; i++)
     {
-        let x0 = x + Math.cos(a + i) * r
-        let y0 = y + Math.sin(a + i) * r
-        aabb.add(
-            x0 - hw - 1,
-            y0 - hw - 1
+        const a = slices[i]
+
+        const r0 = r * (0.9 +  Math.random() * 0.2)
+        ctx.strokeStyle = Color.from(palette[0|Math.random() * palette.length] ).toRGBA(0.5 + Math.random() * 0.5)
+        ctx.beginPath()
+        ctx.moveTo(
+            x + Math.cos(prev) * r0,
+            y + Math.sin(prev) * r0
         )
-        aabb.add(
-            x0 + hw + 1,
-            y0 + hw + 1
+        ctx.arc(
+            x,
+            y,
+            r0,
+            prev,
+            a,
+            false
         )
+        ctx.stroke()
+        prev = a;
     }
 
-    const clipped = aabb.clip(width, height)
-    if (clipped)
-    {
-
-        if (tmp.width < maxWidth || tmp.height < maxWidth)
-        {
-            tmp.width = maxWidth
-            // noinspection JSSuspiciousNameCombination
-            tmp.height = maxWidth
-        }
-
-        tmpCtx.fillStyle = randomExcluding(bg)
-        tmpCtx.fillRect(0,0,maxWidth,maxWidth)
-
-        // console.log("ARC", {x, y, r, angle: prettyAngle(angle), ...clipped})
-        let a = angle - arc / 2
-
-        let prevX = null
-        let prevY = null
-        let prevW = null
-        ctx.fillStyle = Color.from(palette[0|Math.random() * palette.length] ).toRGBA(0.25)
-        let count = 0
-        for (let i = 0; i < arc; i += ARC_STEP)
-        {
-            const w = Math.ceil(Math.sqrt(0.5 - Math.abs(i / arc - 0.5) * 2) * maxWidth)
-
-            let x0 = x + Math.cos(a + i) * r
-            let y0 = y + Math.sin(a + i) * r
-
-            if (clipped.contains(x0, y0))
-            {
-                if (prevX !== null)
-                {
-                    const hw = w >> 1
-                    const phw = prevW >> 1
-
-                    //if (((count++) & 3) === 0)
-                    {
-                        tmpCtx.globalAlpha = 0.2
-                        tmpCtx.drawImage(canvas, x0 - hw, y0 - hw, w, w, 0, 0, maxWidth, maxWidth)
-                        //ctx.fillRect(Math.round(x0 - hw), Math.round(y0 - hw), w, w)
-                    }
-                    ctx.drawImage(tmp, 0, 0, maxWidth, maxWidth, x0 - hw, y0 - hw, w, w)
-                }
-                prevX = x0
-                prevY = y0
-                prevW = w
-            }
-            else
-            {
-                prevX = null
-            }
-        }
-    }
+    console.log("SLICES",slices)
 }
 
 function prettyAngle(a)
@@ -312,15 +263,8 @@ domready(
             noise = new SimplexNoise()
 
             config.power = 0.5 + Math.pow(Math.random(), 0.5) * 1.5
-            config.power = 1.5 + Math.pow(Math.random(), 0.5) * 1.5
+            config.power2 = 1.9 + Math.random() * 0.2
 
-            // const palette =  [
-            //     "#000008",
-            //     "#ab2c79",
-            //     "#ff0000",
-            //     "#ffd500",
-            //     "#89c000"
-            // ]
             const palette =  randomPaletteWithBlack()
             config.palette = palette
 
@@ -366,22 +310,15 @@ domready(
                     let y1 = cy + ym
                     plotLine(x0, y0, x1, y1)
                 }
-            }
-            for (let i = 0; i < cells.length; i++)
-            {
-                const { site } = cells[i]
 
-                const n = Math.ceil(Math.pow(Math.random(), 2) * 8)
-                for (let j = 0; j < n; j++)
+                // const n = Math.ceil(Math.pow(Math.random(), 2) * 8)
+                // for (let j = 0; j < n; j++)
                 {
-                    const r = 10 + Math.round(Math.max(width,height) * 0.3 * Math.random())
-                    const angle = Math.random() * TAU
+                    const r = 10 + Math.round(Math.max(width,height) * 0.2 * Math.random())
 
-                    let n = 12 + Math.random() * 8
+                    let n = 2 + Math.pow(Math.random(),3) * 20
                     const maxWidth = Math.round(n)
-                    const arc = Math.min(n, 10) * TAU/8
-
-                    drawCircle(cx + site[0], cy + site[1], r, angle, maxWidth, arc)
+                    drawCircle(cx + site[0], cy + site[1], r, maxWidth)
                 }
             }
 
